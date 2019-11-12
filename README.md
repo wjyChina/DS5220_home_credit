@@ -1,5 +1,6 @@
 # DS5220_home_credit
-Guanyi(Billy) Chen & 2 members    Email : gychen517@gmail.com
+Guanyi(Billy) Chen    Email : gychen517@gmail.com
+Junyao Wang           Email : wangjunyao961125@gmail.com
 
 courses project for ds5220 fall 19
 
