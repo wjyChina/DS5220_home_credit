@@ -60,4 +60,10 @@ def read_previous_application():
 
     return previous
 
-
+### extract min max balance length from BUREAU Balance ###
+def read_bureau_balance():
+    previous=pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
+    previous=previous.drop(['STATUS'],axis=1)
+    agg=previous.groupby('SK_ID_BUREAU').agg([min,max,'count'])
+    agg.columns=['bureau_balance_min','bureau_balance_max','bureau_balance_count']
+    return agg
