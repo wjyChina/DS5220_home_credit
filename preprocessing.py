@@ -73,7 +73,8 @@ def read_bureau_balance():
 def read_bureau():
     bureau = pd.read_csv('./home-credit-default-risk/bureau.csv')
     bureau = bureau.drop(columns=['AMT_ANNUITY', 'AMT_CREDIT_MAX_OVERDUE'])
-    bureau_balance = read_bureau_balance()
+    bureau_balance = pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
+    #bureau_balance = bureau_balance.drop(['STATUS'], axis=1)
     bureau = bureau.merge(bureau_balance, right_index=True, left_on='SK_ID_BUREAU', how='left')
     bureau = project_preprocessing_helper.df_agg(bureau, 'SK_ID_CURR', 'bureau')
     return bureau
