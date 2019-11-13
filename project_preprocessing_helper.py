@@ -15,7 +15,7 @@ def df_agg(df: pd.DataFrame, main_key, df_name):
     categorical_df = pd.get_dummies(categorical_df)
 
     count = pd.DataFrame(df.groupby(main_key).size())
-    count.columns = ["{}_{}".format(df_name,'count')]
+    count.columns = ["{}_{}".format(df_name, 'count')]
     gc.enable()
     del df
     gc.collect()
