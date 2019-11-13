@@ -33,15 +33,16 @@ def read_application():
 
     df = pd.get_dummies(df)
 
+    return df
+
+def split_train_test_target(df):
     train = df[df['TARGET'].isnull() == False]
     test = df[df['TARGET'].isnull()]
     target = train['TARGET']
     train = train.drop(columns=['TARGET'])
     test = test.drop(columns=['TARGET'])
     features_name = test.columns
-
     return train, test, target, features_name
-
 
 def read_previous_application():
     previous = pd.read_csv("./home-credit-default-risk/previous_application.csv")
@@ -60,14 +61,20 @@ def read_previous_application():
 
     return previous
 
-###Bureau Balance: extract min max balance length of balance, count each dummy variable of status###
+### extract min max balance length from BUREAU Balance ###
 def read_bureau_balance():
-    previous=pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
-    agg_balance=previous.drop(['STATUS'],axis=1).groupby('SK_ID_BUREAU').agg([min,max,'count'])
-    agg_balance.columns=['bureau_balance_min','bureau_balance_max','bureau_balance_count']
-    agg_status=pd.get_dummies(previous.drop(['MONTHS_BALANCE'],axis=1)).groupby('SK_ID_BUREAU').agg([sum])
-    del previous
-    gc.collect()
-    agg_status.columns=['STATUS_0', 'STATUS_1', 'STATUS_2', 'STATUS_3', 'STATUS_4', 'STATUS_5', 'STATUS_C', 'STATUS_X']
-    agg_balance=agg_balance.merge(agg_status,on='SK_ID_BUREAU',how='left')
-    return agg_balance
+    previous = pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
+    previous =previous.drop(['STATUS'],axis=1)
+    agg=previous.groupby('SK_ID_BUREAU').agg([min,max,'count'])
+    agg.columns=['bureau_balance_min','bureau_balance_max','bureau_balance_count']
+    return agg
+
+
+def read_bureau():
+    bureau = pd.read_csv('./home-credit-default-risk/bureau.csv')
+    bureau = bureau.drop(columns=['AMT_ANNUITY', 'AMT_CREDIT_MAX_OVERDUE'])
+    bureau_balance = pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
+    #bureau_balance = bureau_balance.drop(['STATUS'], axis=1)
+    bureau = bureau.merge(bureau_balance, right_index=True, left_on='SK_ID_BUREAU', how='left')
+    bureau = project_preprocessing_helper.df_agg(bureau, 'SK_ID_CURR', 'bureau')
+    return bureau
