@@ -33,15 +33,16 @@ def read_application():
 
     df = pd.get_dummies(df)
 
+    return df
+
+def split_train_test_target(df):
     train = df[df['TARGET'].isnull() == False]
     test = df[df['TARGET'].isnull()]
     target = train['TARGET']
     train = train.drop(columns=['TARGET'])
     test = test.drop(columns=['TARGET'])
     features_name = test.columns
-
     return train, test, target, features_name
-
 
 def read_previous_application():
     previous = pd.read_csv("./home-credit-default-risk/previous_application.csv")

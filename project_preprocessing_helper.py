@@ -9,9 +9,13 @@ def df_agg(df: pd.DataFrame, main_key, df_name):
 
     df_id = df[main_key]
     numberic_df = df.select_dtypes('number')
-    categorical_df = pd.get_dummies(df.select_dtypes('object'))
+    categorical_df = df.select_dtypes('object')
+
+
+    categorical_df = pd.get_dummies(categorical_df)
+
     count = pd.DataFrame(df.groupby(main_key).size())
-    count.columns = ['count']
+    count.columns = ["{}_{}".format(df_name,'count')]
     gc.enable()
     del df
     gc.collect()
@@ -23,10 +27,11 @@ def df_agg(df: pd.DataFrame, main_key, df_name):
     # print(agg.head(3))
     numberic_df = rename(agg, main_key, df_name, stats)
 
+
     categorical_df[main_key] = df_id
     stats = ['mean']
     agg = categorical_df.groupby(main_key).agg(stats)
-    # agg = agg.reset_index()
+        # agg = agg.reset_index()
     categorical_df = rename(agg, main_key, df_name, stats)
 
     numberic_df = count.merge(numberic_df, right_index=True, left_on=main_key, how='outer')
