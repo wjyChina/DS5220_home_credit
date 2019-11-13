@@ -61,7 +61,6 @@ def read_previous_application():
 
     return previous
 
-
 ### extract min max balance length from BUREAU Balance ###
 def read_bureau_balance():
     previous = pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
