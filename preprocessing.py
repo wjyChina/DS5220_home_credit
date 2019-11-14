@@ -85,7 +85,7 @@ def read_bureau():
 
 ### AGG min max mean for numeric columns, AGG counts for factor columns ###
 def read_POS_balance():
-    previous=pd.read_csv('../POS_CASH_balance.csv')
+    previous=pd.read_csv('./home-credit-default-risk/POS_CASH_balance.csv')
     previous = previous.fillna(0)
     previous = previous.drop('SK_ID_CURR', axis=1)
     factor = [col for col in previous.columns if previous[col].dtype == 'object']
