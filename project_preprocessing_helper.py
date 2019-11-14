@@ -29,7 +29,7 @@ def df_agg(df: pd.DataFrame, main_key, df_name):
 
 
     categorical_df[main_key] = df_id
-    stats = ['mean']
+    stats = ['mode']
     agg = categorical_df.groupby(main_key).agg(stats)
         # agg = agg.reset_index()
     categorical_df = rename(agg, main_key, df_name, stats)
