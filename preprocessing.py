@@ -85,7 +85,7 @@ def read_bureau():
 
 ### AGG min max mean for numeric columns, AGG counts for factor columns ###
 def read_POS_balance():
-    previous=pd.read_csv('../POS_CASH_balance.csv')
+    previous=pd.read_csv('./home-credit-default-risk/POS_CASH_balance.csv')
     previous = previous.fillna(0)
     previous = previous.drop('SK_ID_CURR', axis=1)
     factor = [col for col in previous.columns if previous[col].dtype == 'object']
@@ -103,3 +103,30 @@ def read_POS_balance():
     gc.collect()
     agg_num=agg_num.merge(agg_factor,on='SK_ID_PREV',how='left')
     return agg_num
+
+### Extract min max median from installation file ###
+def read_Install_balance():
+    previous=pd.read_csv('./home-credit-default-risk/installments_payments.csv')
+    previous = previous.fillna(0)
+    previous = previous.drop('SK_ID_CURR', axis=1)
+    agg = previous.groupby('SK_ID_PREV').agg(['min', 'max', 'median'])
+    col_name = []
+    for i in previous.columns[1:]:
+        for j in ['min', 'max', 'median']:
+            col_name.append('{}_{}'.format(i, j))
+    agg.columns = col_name
+    return agg
+
+### Extract min max median from Card Balance and sum the dummy variables ###
+def read_Card_balance():
+    previous = pd.read_csv('./home-credit-default-risk/credit_card_balance.csv')
+    previous = previous.drop('SK_ID_CURR', axis=1)
+    agg_factor = pd.get_dummies(previous[['SK_ID_PREV', 'NAME_CONTRACT_STATUS']]).groupby('SK_ID_PREV').agg(sum)
+    agg = previous.drop('NAME_CONTRACT_STATUS', axis=1).groupby('SK_ID_PREV').agg(['min', 'max', 'median'])
+    col_name = []
+    for i in previous.drop('NAME_CONTRACT_STATUS', axis=1).columns[1:]:
+        for j in ['min', 'max', 'median']:
+            col_name.append('{}_{}'.format(i, j))
+    agg.columns = col_name
+    agg = agg.merge(agg_factor, on='SK_ID_PREV', how='left')
+    return agg
