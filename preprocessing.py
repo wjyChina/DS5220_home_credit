@@ -61,7 +61,7 @@ def read_previous_application():
 
     return previous
 
-###Bureau Balance: extract min max balance length of balance, count each dummy variable of status###
+### Bureau Balance: extract min max balance length of balance, count each dummy variable of status ###
 def read_bureau_balance():
     previous=pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
     agg_balance=previous.drop(['STATUS'],axis=1).groupby('SK_ID_BUREAU').agg([min,max,'count'])
@@ -82,3 +82,24 @@ def read_bureau():
     bureau = bureau.merge(bureau_balance, right_index=True, left_on='SK_ID_BUREAU', how='left')
     bureau = project_preprocessing_helper.df_agg(bureau, 'SK_ID_CURR', 'bureau')
     return bureau
+
+### AGG min max mean for numeric columns, AGG counts for factor columns ###
+def read_POS_balance():
+    previous=pd.read_csv('../POS_CASH_balance.csv')
+    previous = previous.fillna(0)
+    previous = previous.drop('SK_ID_CURR', axis=1)
+    factor = [col for col in previous.columns if previous[col].dtype == 'object']
+    pre_num = previous.drop(factor, axis=1)
+    factor.append('SK_ID_PREV')
+    pre_factor = previous[factor]
+    agg_num = pre_num.groupby('SK_ID_PREV').agg(['min', 'max', 'mean'])
+    col_name = []
+    for i in pre_num.columns[1:]:
+        for j in ['min', 'max', 'mean']:
+            col_name.append('{}_{}'.format(i, j))
+    agg_num.columns = col_name
+    agg_factor = pd.get_dummies(pre_factor, dummy_na=True).groupby('SK_ID_PREV').agg(sum)
+    del previous
+    gc.collect()
+    agg_num=agg_num.merge(agg_factor,on='SK_ID_PREV',how='left')
+    return agg_num
