@@ -12,7 +12,7 @@ def df_agg(df: pd.DataFrame, main_key, df_name):
     categorical_df = df.select_dtypes('object')
 
 
-    categorical_df = pd.get_dummies(categorical_df)
+    categorical_df = pd.get_dummies(categorical_df, dummy_na=True)
 
     count = pd.DataFrame(df.groupby(main_key).size())
     count.columns = ["{}_{}".format(df_name, 'count')]
