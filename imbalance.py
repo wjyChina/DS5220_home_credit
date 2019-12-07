@@ -44,3 +44,14 @@ def weightlog(X_train, y_train, X_test):
     logreg.fit(X_train, y_train)
     y_pred = logreg.predict(X_test)
     return y_pred
+
+
+# Duplicating data
+def dup(data):
+    dup_times = int(data['TARGET'].value_counts()[0] / data['TARGET'].value_counts()[1])
+    data_1 = data[data['TARGET'] == 1]
+    big_data_1 = data_1.copy()
+    for i in range(dup_times - 2):
+        big_data_1 = pd.concat([big_data_1, data_1])
+    data = pd.concat([data, big_data_1])
+    return data
