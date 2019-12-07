@@ -21,8 +21,8 @@ def read_application():
     df = df[df['NAME_FAMILY_STATUS'] != 'Unknown']
     df = df[df['NAME_INCOME_TYPE'] != 'Maternity leave']
 
-    df['DAYS_EMPLOYED'].replace(365243, np.nan, inplace=True)
-    df['DAYS_EMPLOYED_ABNORMAL'] = (df['DAYS_EMPLOYED'] == np.nan)
+    df['DAYS_EMPLOYED_ABNORMAL'] = df['DAYS_EMPLOYED'] == 365243
+    df['DAYS_EMPLOYED'].replace({3365243: np.nan}, inplace=True)
 
     df['RATIO_DAYS_EMPLOYED'] = df['DAYS_EMPLOYED'] / df['DAYS_BIRTH']
     df['RATIO_INCOME_CREDIT'] = df['AMT_INCOME_TOTAL'] / df['AMT_CREDIT']
@@ -30,18 +30,19 @@ def read_application():
     df['RATIO_ANNUITY_INCOME'] = df['AMT_ANNUITY'] / df['AMT_INCOME_TOTAL']
     df['RATIO_ANNUITY_CREDIT'] = df['AMT_ANNUITY'] / df['AMT_CREDIT']
 
-    df = pd.get_dummies(df)
+    df = pd.get_dummies(df, dummy_na = True)
 
     return df
+
 
 def split_train_test_target(df):
     train = df[df['TARGET'].isnull() == False]
     test = df[df['TARGET'].isnull()]
-    target = train['TARGET']
-    train = train.drop(columns=['TARGET'])
     test = test.drop(columns=['TARGET'])
     features_name = test.columns
-    return train, test, target, features_name
+    return train, test, features_name
+
+
 
 def read_previous_application():
     previous = pd.read_csv("./home-credit-default-risk/previous_application.csv")
@@ -65,10 +66,10 @@ def read_bureau_balance():
     previous=pd.read_csv('./home-credit-default-risk/bureau_balance.csv')
     agg_balance=previous.drop(['STATUS'],axis=1).groupby('SK_ID_BUREAU').agg([min,max,'count'])
     agg_balance.columns=['bureau_balance_min','bureau_balance_max','bureau_balance_count']
-    agg_status=pd.get_dummies(previous.drop(['MONTHS_BALANCE'],axis=1)).groupby('SK_ID_BUREAU').agg('mean')
+    agg_status=pd.get_dummies(previous.drop(['MONTHS_BALANCE'],axis=1), dummy_na=True).groupby('SK_ID_BUREAU').agg('mean')
     del previous
     gc.collect()
-    agg_status.columns=['STATUS_0', 'STATUS_1', 'STATUS_2', 'STATUS_3', 'STATUS_4', 'STATUS_5', 'STATUS_C', 'STATUS_X']
+    agg_status.columns=['STATUS_0', 'STATUS_1', 'STATUS_2', 'STATUS_3', 'STATUS_4', 'STATUS_5', 'STATUS_C', 'STATUS_X', 'Nan']
     agg_balance=agg_balance.merge(agg_status,on='SK_ID_BUREAU',how='left')
     return agg_balance
 
@@ -100,7 +101,7 @@ def read_POS_balance():
     agg_factor = pd.get_dummies(pre_factor, dummy_na=True).groupby('SK_ID_CURR').agg('mean')
     del previous
     gc.collect()
-    agg_num=agg_num.merge(agg_factor,on='SK_ID_CURR',how='left')
+    agg_num = agg_num.merge(agg_factor,on='SK_ID_CURR',how='left')
     return agg_num
 
 ### Extract min max median from installation file ###
@@ -120,7 +121,7 @@ def read_Install_balance():
 def read_Card_balance():
     previous = pd.read_csv('./home-credit-default-risk/credit_card_balance.csv')
     previous = previous.drop('SK_ID_PREV', axis=1)
-    agg_factor = pd.get_dummies(previous[['SK_ID_CURR', 'NAME_CONTRACT_STATUS']]).groupby('SK_ID_CURR').agg('mean')
+    agg_factor = pd.get_dummies(previous[['SK_ID_CURR', 'NAME_CONTRACT_STATUS']], dummy_na=True).groupby('SK_ID_CURR').agg('mean')
     agg = previous.drop('NAME_CONTRACT_STATUS', axis=1).groupby('SK_ID_CURR').agg(['min', 'max', 'mean'])
     col_name = []
     for i in previous.drop('NAME_CONTRACT_STATUS', axis=1).columns[1:]:
@@ -130,32 +131,43 @@ def read_Card_balance():
     agg = agg.merge(agg_factor, on='SK_ID_CURR', how='left')
     return agg
 
+
 ### Get train test data and wirte into .csv ###
 def get_train_test_data():
-    data = read_bureau()
-    pre=read_application()
-    train, test, target, features_name=split_train_test_target(pre)
-    test.to_csv('test.csv')
-    del test,target,features_name,pre
-    gc.collect()
-    train=train.merge(data,on='SK_ID_CURR',how='left')
-    del data
+
+    pre = read_application()
+
+    data_merge = read_bureau()
+    pre = pre.merge(data_merge,on='SK_ID_CURR',how='left')
+    del data_merge
     gc.collect()
 
     data_merge = read_POS_balance()
-    train = train.merge(data_merge, on='SK_ID_CURR', how='left')
-    del data_merge
-    gc.collect()
-    data_merge = read_Install_balance()
-    train = train.merge(data_merge, on='SK_ID_CURR', how='left')
-    del data_merge
-    gc.collect()
-    data_merge = read_Card_balance()
-    train = train.merge(data_merge, on='SK_ID_CURR', how='left')
+    pre = pre.merge(data_merge, on='SK_ID_CURR', how='left')
     del data_merge
     gc.collect()
 
-    pre=read_previous_application()
-    train=train.merge(pre,on='SK_ID_CURR',how='left')
+    data_merge = read_Install_balance()
+    pre = pre.merge(data_merge, on='SK_ID_CURR', how='left')
+    del data_merge
+    gc.collect()
+
+    data_merge = read_Card_balance()
+    pre = pre.merge(data_merge, on='SK_ID_CURR', how='left')
+    del data_merge
+    gc.collect()
+
+    data_merge = read_previous_application()
+    pre = pre.merge(data_merge, on='SK_ID_CURR', how='left')
+    del data_merge
+    gc.collect()
+
+    train, test, target = split_train_test_target(pre)
+    test.to_csv('test.csv')
     train.to_csv("train.csv")
+
     return
+
+
+if __name__ == "__main__":
+    get_train_test_data()

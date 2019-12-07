@@ -12,16 +12,16 @@ def df_agg(df: pd.DataFrame, main_key, df_name):
     categorical_df = df.select_dtypes('object')
 
 
-    categorical_df = pd.get_dummies(categorical_df)
+    categorical_df = pd.get_dummies(categorical_df, dummy_na=True)
 
     count = pd.DataFrame(df.groupby(main_key).size())
-    count.columns = ["{}_{}".format(df_name,'count')]
+    count.columns = ["{}_{}".format(df_name, 'count')]
     gc.enable()
     del df
     gc.collect()
 
     numberic_df[main_key] = df_id
-    stats = ['mean', 'max', 'min', 'sum']
+    stats = ['mean', 'max', 'min', 'median']
     agg = numberic_df.groupby(main_key).agg(stats)
     # agg = agg.reset_index()
     # print(agg.head(3))
